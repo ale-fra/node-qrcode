@@ -21,12 +21,12 @@
   },
   {
     "path": "^cli\\.\\[\"-h\"\\]\\.out$",
-    "reason": "yargs 18: help layout (options without short alias are indented); same text (see cli.helpText, compared without whitespace)"
+    "reason": "CLI help adds PDF output, layout and batch options; yargs 18 also changes whitespace."
   },
   {
     "path": "^to(DataURL|Buffer):\\d+:\\d+:(svg|utf8|txt):(cb\\.results\\[0\\]\\.err|p\\.rejected)$",
     "refMatches": "^renderFunc is not a function$",
-    "candMatches": "^Type \"(svg|utf8|txt)\" is not supported by to(DataURL|Buffer)\\(\\)\\. Only \"png\" is supported\\.$",
+    "candMatches": "^Type \"(svg|utf8|txt)\" is not supported by to(DataURL|Buffer)\\(\\)\\. Only \"png\" and \"pdf\" are supported\\.$",
     "reason": "Documented bug fix: unsupported output types now report a useful error instead of invoking an absent renderer method."
   },
   {
@@ -34,5 +34,16 @@
     "refMatches": "^undefined$",
     "candMatches": "^string$",
     "reason": "Documented bug fix: null options are treated as omitted; SVG/UTF8 renderer returns its string after calling the callback."
+  },
+  {
+    "path": "^surface:lib/(index|server)\\.toPdf$",
+    "refMatches": "^undefined$",
+    "reason": "New Node-only printable PDF batch API. Verified by the PDF geometry suite and installed package checks."
+  },
+  {
+    "path": "^cli\\.helpText$",
+    "refMatches": "^650e8dd3f92439f58b1e008529f9d09890cc0f27f8e745885894e772be13bae7$",
+    "candMatches": "^56d126461de2d8f609749cf5e1b5475412f91578bf43447f7d7561cc4738a550$",
+    "reason": "CLI adds exactly the reviewed PDF renderer, layout and batch help text. Hash constraints reject any unrelated help change."
   }
 ]

@@ -40,3 +40,10 @@ export function readInput (stdin: InputStream, argText: string, cb: (text: strin
     cb(text.length ? text : argText)
   })
 }
+
+/** One code per nonblank stdin line or positional argument. Preserve spaces. */
+export function getBatchInputs (stdinText: string, args: Array<string | number>): string[] {
+  return stdinText.length
+    ? stdinText.split(/\r?\n/).filter((line) => line.trim().length)
+    : args.map(String)
+}

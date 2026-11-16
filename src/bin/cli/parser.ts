@@ -5,6 +5,8 @@ import { hideBin } from 'yargs/helpers'
 import * as fs from 'fs'
 import * as path from 'path'
 
+const PAGE_SIZES = ['A4', 'A3', 'A5', 'Letter', 'Legal']
+
 /**
  * Command line arguments (see createParser())
  */
@@ -22,6 +24,14 @@ export interface CliArgs {
   scale?: number
   lightcolor?: string
   darkcolor?: string
+  batch?: boolean
+  'page-size'?: string
+  size?: number
+  top?: number
+  left?: number
+  gap?: number
+  columns?: number
+  rows?: number
   output?: string
 }
 
@@ -66,7 +76,7 @@ export function createParser (args: string[] = hideBin(process.argv)): yargs.Arg
     .option('t', {
       alias: 'type',
       description: 'Output type',
-      choices: ['png', 'svg', 'utf8'],
+      choices: ['png', 'svg', 'utf8', 'pdf'],
       implies: 'output',
       group: 'Renderer options:'
     })
@@ -112,6 +122,58 @@ export function createParser (args: string[] = hideBin(process.argv)): yargs.Arg
       conflicts: 'type',
       group: 'Renderer options:'
     })
+    .option('page-size', {
+      description: 'Page size',
+      choices: PAGE_SIZES,
+      coerce: function (value: unknown) {
+      // case-insensitive: "a4" -> "A4", "letter" -> "Letter"
+        const match = PAGE_SIZES.filter(function (name) { return name.toLowerCase() === String(value).toLowerCase() })
+        return match.length ? match[0] : value
+      },
+      defaultDescription: 'A4',
+      group: 'PDF options (sizes in mm):'
+    })
+    .option('size', {
+      description: 'QR code size, quiet zone included',
+      defaultDescription: '50',
+      group: 'PDF options (sizes in mm):',
+      type: 'number'
+    })
+    .option('top', {
+      description: 'Distance from the top edge of the page',
+      defaultDescription: 'centered',
+      group: 'PDF options (sizes in mm):',
+      type: 'number'
+    })
+    .option('left', {
+      description: 'Distance from the left edge of the page',
+      defaultDescription: 'centered',
+      group: 'PDF options (sizes in mm):',
+      type: 'number'
+    })
+    .option('gap', {
+      description: 'Space between codes (--batch)',
+      defaultDescription: '5',
+      group: 'PDF options (sizes in mm):',
+      type: 'number'
+    })
+    .option('columns', {
+      description: 'Codes per row (--batch)',
+      defaultDescription: 'as many as fit',
+      group: 'PDF options (sizes in mm):',
+      type: 'number'
+    })
+    .option('rows', {
+      description: 'Rows per page (--batch)',
+      defaultDescription: 'as many as fit',
+      group: 'PDF options (sizes in mm):',
+      type: 'number'
+    })
+    .option('batch', {
+      description: 'One QR code per input line (stdin) or argument, laid out on a grid over as many pages as needed',
+      group: 'PDF options (sizes in mm):',
+      type: 'boolean'
+    })
     .option('o', {
       alias: 'output',
       description: 'Output file'
@@ -122,5 +184,7 @@ export function createParser (args: string[] = hideBin(process.argv)): yargs.Arg
     .example('$0 "some text"', 'Draw in terminal window')
     .example('$0 -o out.png "some text"', 'Save as png image')
     .example('$0 -d F00 -o out.png "some text"', 'Use red as foreground color')
+    .example('$0 -o out.pdf --size 40 --top 20 --left 20 "some text"', 'Place a 40 mm QR code on an A4 PDF')
+    .example('$0 -o sheet.pdf --batch --size 30 < urls.txt', 'One 30 mm QR code per line, as many pages as needed')
     .parserConfiguration({ 'parse-numbers': false })
 }

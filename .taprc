@@ -4,6 +4,8 @@
 # (done by `pnpm test` through the pretest script).
 files:
   - test/**/*.test.ts
+  - test/**/*.test.cjs
+timeout: 120
 node-arg:
   # tap installs source-map-support when a test requires it, ie. after tsx
   # compiled the test file: installed first, so that failure locations point

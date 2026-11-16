@@ -15,6 +15,7 @@ function runNode (consumer: Consumer, file: string): void {
 
 export function checkRuntime (report: Report, consumer: Consumer): void {
   report.check('require() (CommonJS)', () => runNode(consumer, 'runtime/cjs.cjs'))
+  report.check('PDF Node API (promise, callback, segments and data URL)', () => runNode(consumer, 'runtime/pdf.cjs'))
   report.check('import (ES module)', () => runNode(consumer, 'runtime/esm.mjs'))
   report.check('README TypeScript example', () => runNode(consumer, 'runtime/readme.mts'))
 
@@ -37,5 +38,14 @@ export function checkRuntime (report: Report, consumer: Consumer): void {
     if (result.status !== 0) throw new Error(result.stderr)
     const signature = fs.readFileSync(file).subarray(0, 4).toString('hex')
     if (signature !== '89504e47') throw new Error('Not a png file')
+  })
+  report.check('CLI: printable PDF batch from stdin', () => {
+    const file = path.join(consumer.dir, 'batch.pdf')
+    const result = exec(cli, ['-o', file, '--batch', '--columns', '1', '--rows', '1', '--page-size', 'letter'], consumer.dir, 'one\ntwo\n')
+    if (result.status !== 0) throw new Error(result.stderr)
+    const pdf = fs.readFileSync(file).toString('latin1')
+    if (!pdf.startsWith('%PDF-1.4') || !/\/Count 2\b/.test(pdf) || !/\/MediaBox \[0 0 612 792\]/.test(pdf)) {
+      throw new Error('Expected a two-page Letter PDF')
+    }
   })
 }

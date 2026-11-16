@@ -27,14 +27,14 @@ There are a few basic ground-rules for contributors:
 
 Requirements: Node.js >= 22.18 (`.nvmrc`; `devEngines` in `package.json`, checked by the
 build and test scripts since pnpm does not check it), pnpm (version pinned in `package.json`).
-See [instruction.md](instruction.md) for installation, tests and smoke tests, step by step.
+See [README.md](README.md) for usage and the commands below for development checks.
 
 ### Layout
 
 | Folder | Content |
 | --- | --- |
 | `src/` | TypeScript sources: `src/{lib,helper,bin}` compile to `./{lib,helper,bin}` (the published paths) |
-| `test/` | tap tests (TypeScript): `unit/` mirrors `src/`, `e2e/` tests the public API and the CLI, `utils/` shared test helpers, `fixtures/` expected outputs |
+| `test/` | tap tests (TypeScript plus the imported PDF assertion corpus in CommonJS): `unit/` mirrors `src/`, `e2e/` tests the public API and the CLI, `utils/` shared test helpers, `fixtures/` expected outputs |
 | `examples/` | examples (TypeScript, run directly by Node.js) |
 | `tools/` | development tools: `node-version/` (Node.js version check), `compile-check/` (keeps compiled files consistent with `src/` before incremental builds), `migration-check/` (behavioural comparison with the JavaScript implementation), `package-check/` (checks of the published package, as used by consumers) |
 | `rollup.config.ts` | browser bundles (`build/`, not committed) |

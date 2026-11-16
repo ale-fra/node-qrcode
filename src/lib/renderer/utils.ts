@@ -1,4 +1,4 @@
-import type { QRCode, QRCodeRenderersOptions } from '../types'
+import type { QRCode, QRCodeRenderersOptions, QRCodePdfRendererOptions } from '../types'
 
 /**
  * RGBA color, as parsed from an hex string
@@ -16,7 +16,7 @@ export interface RGBAColor {
  * Renderer specific options
  * (png: pngjs options, canvas: image quality for toDataURL())
  */
-export interface RendererOpts {
+export interface RendererOpts extends QRCodePdfRendererOptions {
   quality?: number
   deflateLevel?: number
   deflateStrategy?: number

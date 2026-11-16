@@ -68,7 +68,7 @@ export function checkTypes (report: Report, consumer: Consumer): void {
   const COMMON_OPTIONS = commonOptions(typeRoots)
 
   for (const c of CONFIGURATIONS) {
-    report.check('public API compiles (' + c.name + ')', () => compile(consumer, COMMON_OPTIONS.concat(c.options, [c.file])))
+    report.check('public API compiles (' + c.name + ')', () => compile(consumer, COMMON_OPTIONS.concat(c.options, [c.file, 'types/pdf.ts'])))
   }
 
   report.check('invalid usages are rejected (@ts-expect-error)', () =>

@@ -5,7 +5,7 @@ const toSJIS = require('qrcode/helper/to-sjis')
 const BitBuffer = require('qrcode/lib/core/bit-buffer')
 
 assert.deepStrictEqual(Object.keys(QRCode).sort(),
-  ['create', 'default', 'toBuffer', 'toCanvas', 'toDataURL', 'toFile', 'toFileStream', 'toString'])
+  ['create', 'default', 'toBuffer', 'toCanvas', 'toDataURL', 'toFile', 'toFileStream', 'toPdf', 'toString'])
 assert.strictEqual(QRCode.default.toString, QRCode.toString, 'default export has the same functions')
 assert.ok(QRCode.toString('hi', { type: 'svg' }, () => {}).startsWith('<svg'))
 assert.strictEqual(typeof toSJIS, 'function', 'helper/to-sjis exports a function')

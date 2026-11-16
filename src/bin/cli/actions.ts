@@ -1,3 +1,5 @@
+import * as fs from 'fs'
+import { getGridLayout } from '../../lib/renderer/pdf'
 import * as qr from '../../lib'
 import type { QRCodeToFileOptions, QRCodeToStringOptions } from '../../lib'
 import type { CliOptions } from './options'
@@ -20,8 +22,7 @@ export function save (file: string, text: string, options: CliOptions, io: CliIO
   qr.toFile(file, text, options as QRCodeToFileOptions, function (err) {
     if (err) {
       io.error('Error:', err.message)
-      io.exit(1)
-      return
+      return io.exit(1)
     }
 
     io.log('saved qrcode to: ' + file + '\n')
@@ -37,8 +38,7 @@ export function print (text: string, options: CliOptions, io: CliIO): void {
   qr.toString(text, options as QRCodeToStringOptions, function (err, output) {
     if (err) {
       io.error('Error:', err.message)
-      io.exit(1)
-      return
+      return io.exit(1)
     }
 
     io.log(output)
@@ -62,4 +62,23 @@ export function run (text: string, output: string | undefined, options: CliOptio
   } else {
     print(text, options, io)
   }
+}
+
+/** Saves a batch as one printable PDF with deterministic page order. */
+export function saveBatch (file: string, texts: string[], options: CliOptions, io: CliIO): void {
+  qr.toPdf(texts, options as import('../../lib').QRCodeToPdfOptions, function (err, buffer) {
+    if (err) {
+      io.error('Error:', err.message)
+      return io.exit(1)
+    }
+    fs.writeFile(file, buffer, function (err) {
+      if (err) {
+        io.error('Error:', err.message)
+        return io.exit(1)
+      }
+      const pages = Math.ceil(texts.length / getGridLayout(options.rendererOpts).cells.length)
+      io.log('saved ' + texts.length + ' qrcode' + (texts.length === 1 ? '' : 's') + ' on ' +
+        pages + ' page' + (pages === 1 ? '' : 's') + ' to: ' + file + '\n')
+    })
+  })
 }

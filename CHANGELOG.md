@@ -34,6 +34,13 @@ renderers, files, browser entry point, CLI, browser bundles).
 
 ### Features
 
+* Printable vector PDF output (`toFile`, `toBuffer`, `toDataURL`) and `toPdf`
+  batch grids with pagination, A3/A4/A5/Letter/Legal pages and millimetre layout.
+* CLI `--batch`, `--page-size`, `--size`, `--top`, `--left`, `--gap`, `--columns`
+  and `--rows`; one code per argument or nonblank stdin line.
+* Public PDF option types, callback/promise overloads and package consumer checks.
+  The PDF writer is Node.js only and is excluded from browser bundles.
+
 * Default export: `import QRCode from 'qrcode'` works with bundlers and
   TypeScript, with or without `esModuleInterop`.
 * Types for the browser bundles' `QRCode` global:
@@ -45,7 +52,7 @@ renderers, files, browser entry point, CLI, browser bundles).
 * `toDataURL()`: the callback was called twice (the second time with a
   `TypeError`) when the image could not be rendered.
 * `toDataURL()`/`toBuffer()` with `type: 'svg' | 'utf8' | 'txt'` failed with
-  "renderFunc is not a function": they now report that only png is supported.
+  "renderFunc is not a function": they now report that png and pdf are supported.
 * `null` options are treated as omitted options (they threw a `TypeError`).
 * README: the kanji example used `build/qrcode.min.js` and
   `build/qrcode.tosjis.min.js`, which do not exist (`build/qrcode.js`, `build/qrcode.tosjis.js`).
@@ -54,7 +61,6 @@ renderers, files, browser entry point, CLI, browser bundles).
 
 * README: `toBuffer()` documented, CLI help updated (`--inverse` was missing),
   `toFileStream()` error reporting, Node.js requirement, TypeScript usage.
-* `instruction.md`: installation, tests, test verification and smoke tests.
 * `CONTRIBUTING.md`: development guide (layout, scripts, test conventions).
 
 Note: releases 1.4.0 to 1.5.4 are not listed in this file.

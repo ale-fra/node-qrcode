@@ -29,7 +29,7 @@ function runBundle (code: string): Promise<BundleResult> {
 }
 
 async function checkBundle (code: string, expectedKeys: string[]): Promise<void> {
-  if (/pngjs|createWriteStream/.test(code)) throw new Error('The bundle contains server code')
+  if (/pngjs|createWriteStream|PDF-1\.4|GSLight|GSDark|ExtGState/.test(code)) throw new Error('The bundle contains server code')
 
   const result = await runBundle(code)
   if (JSON.stringify(result.keys) !== JSON.stringify(expectedKeys)) {

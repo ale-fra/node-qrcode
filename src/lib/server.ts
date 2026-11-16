@@ -4,6 +4,7 @@ import * as PngRenderer from './renderer/png'
 import * as Utf8Renderer from './renderer/utf8'
 import * as TerminalRenderer from './renderer/terminal'
 import * as SvgRenderer from './renderer/svg'
+import * as PdfRenderer from './renderer/pdf'
 import { toCanvas as browserToCanvas } from './browser'
 import type { Writable } from 'stream'
 import type { RendererOptionsInput } from './renderer/utils'
@@ -16,7 +17,8 @@ import type {
   QRCodeToDataURLOptions,
   QRCodeToFileOptions,
   QRCodeToFileStreamOptions,
-  QRCodeToStringOptions
+  QRCodeToStringOptions,
+  QRCodeToPdfOptions
 } from './types'
 
 type Callback = (error: any, result?: any) => void
@@ -76,7 +78,7 @@ function checkParams (text: unknown, opts: any, cb: any): Params {
 function unsupportedType (apiName: string, type: string | undefined): RenderFunc {
   return function (_data, _opts, cb) {
     cb(new Error('Type "' + type + '" is not supported by ' + apiName +
-      '(). Only "png" is supported.'))
+      '(). Only "png" and "pdf" are supported.'))
   }
 }
 
@@ -88,6 +90,10 @@ function getRendererFromType (type: string | undefined): FileRenderer {
   switch (type) {
     case 'svg':
       return SvgRenderer
+
+    case 'pdf':
+    case 'application/pdf':
+      return PdfRenderer
 
     case 'txt':
     case 'utf8':
@@ -154,7 +160,7 @@ export function toString (text: QRCodeInput, opts?: any, cb?: any): any {
 
 /**
  * Returns a Data URI containing a representation of the QR Code image.
- * Only works with png format (image/jpeg and image/webp: browser only).
+ * Node.js: png or pdf (image/jpeg and image/webp: browser only).
  */
 export function toDataURL (text: QRCodeInput, callback: QRCodeCallback<string>): void
 export function toDataURL (text: QRCodeInput, options?: QRCodeToDataURLOptions): Promise<string>
@@ -169,7 +175,7 @@ export function toDataURL (text: QRCodeInput, opts?: any, cb?: any): any {
 
 /**
  * Returns a Buffer containing a representation of the QR Code image.
- * Only works with png format.
+ * Supports png and vector pdf formats.
  */
 export function toBuffer (text: QRCodeInput, callback: QRCodeCallback<Buffer>): void
 export function toBuffer (text: QRCodeInput, options?: QRCodeToBufferOptions): Promise<Buffer>
@@ -228,4 +234,39 @@ export function toFileStream (stream: Writable, text: QRCodeInput, opts?: any): 
   const renderer = getRendererFromType('png') as typeof PngRenderer // Only png support for now
   const renderToFileStream = renderer.renderToFileStream.bind(null, stream)
   render(renderToFileStream, text, params)
+}
+
+/** Render one QR per item on a printable PDF grid, adding pages as needed. */
+export function toPdf (texts: QRCodeInput[], callback: QRCodeCallback<Buffer>): void
+export function toPdf (texts: QRCodeInput[], options?: QRCodeToPdfOptions): Promise<Buffer>
+export function toPdf (texts: QRCodeInput[], options: QRCodeToPdfOptions | undefined, callback: QRCodeCallback<Buffer>): void
+export function toPdf (texts: QRCodeInput[], opts?: any, cb?: any): any {
+  if (!Array.isArray(texts) || !texts.length) {
+    throw new Error('toPdf requires a non-empty array of texts')
+  }
+  const params = checkParams(texts, opts, cb)
+  function run (done: Callback): void {
+    let buffer: Buffer
+    try {
+      const qrDataList = texts.map(function (text, i) {
+        try {
+          return QRCode.create(text, params.opts)
+        } catch (e) {
+          (e as Error).message = 'Item ' + (i + 1) + ': ' + (e as Error).message
+          throw e
+        }
+      })
+      buffer = PdfRenderer.renderMany(qrDataList, params.opts)
+    } catch (e) {
+      done(e)
+      return
+    }
+    done(null, buffer)
+  }
+  if (!params.cb) {
+    return new Promise<Buffer>(function (resolve, reject) {
+      run(function (err, buffer) { return err ? reject(err) : resolve(buffer) })
+    })
+  }
+  run(params.cb)
 }

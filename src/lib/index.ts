@@ -34,6 +34,8 @@ export const toBuffer: typeof server.toBuffer = server.toBuffer
 
 export const toFile: typeof server.toFile = server.toFile
 
+export const toPdf: typeof server.toPdf = server.toPdf
+
 export const toFileStream: typeof server.toFileStream = server.toFileStream
 
 /**
@@ -51,5 +53,6 @@ export default {
   toDataURL: server.toDataURL as typeof toDataURL,
   toBuffer: server.toBuffer,
   toFile: server.toFile,
-  toFileStream: server.toFileStream
+  toFileStream: server.toFileStream,
+  toPdf: server.toPdf
 }

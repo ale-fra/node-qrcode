@@ -9,7 +9,7 @@ import type {
   QRCodeCallback,
   QRCodeInput,
   QRCodeRenderersOptions,
-  QRCodeToDataURLOptions,
+  QRCodeBrowserToDataURLOptions,
   QRCodeToStringOptions
 } from './types'
 
@@ -115,11 +115,11 @@ export function toCanvas (...args: any[]): Promise<CanvasLike> | undefined {
  * If canvas is not provided, a new canvas element is created.
  */
 export function toDataURL (canvasElement: HTMLCanvasElement | CanvasLike, text: QRCodeInput, callback: QRCodeCallback<string>): void
-export function toDataURL (canvasElement: HTMLCanvasElement | CanvasLike, text: QRCodeInput, options?: QRCodeToDataURLOptions): Promise<string>
-export function toDataURL (canvasElement: HTMLCanvasElement | CanvasLike, text: QRCodeInput, options: QRCodeToDataURLOptions | undefined, callback: QRCodeCallback<string>): void
+export function toDataURL (canvasElement: HTMLCanvasElement | CanvasLike, text: QRCodeInput, options?: QRCodeBrowserToDataURLOptions): Promise<string>
+export function toDataURL (canvasElement: HTMLCanvasElement | CanvasLike, text: QRCodeInput, options: QRCodeBrowserToDataURLOptions | undefined, callback: QRCodeCallback<string>): void
 export function toDataURL (text: QRCodeInput, callback: QRCodeCallback<string>): void
-export function toDataURL (text: QRCodeInput, options?: QRCodeToDataURLOptions): Promise<string>
-export function toDataURL (text: QRCodeInput, options: QRCodeToDataURLOptions | undefined, callback: QRCodeCallback<string>): void
+export function toDataURL (text: QRCodeInput, options?: QRCodeBrowserToDataURLOptions): Promise<string>
+export function toDataURL (text: QRCodeInput, options: QRCodeBrowserToDataURLOptions | undefined, callback: QRCodeCallback<string>): void
 export function toDataURL (...args: any[]): Promise<string> | undefined {
   return renderCanvas<string>(CanvasRenderer.renderToDataURL, args)
 }

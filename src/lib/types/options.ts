@@ -79,8 +79,10 @@ export interface QRCodePngRendererOptions {
   deflateStrategy?: number | undefined
 }
 
-export type QRCodeDataURLType = 'image/png' | 'image/jpeg' | 'image/webp'
-export type QRCodeToDataURLOptions = QRCodeToDataURLOptionsJpegWebp | QRCodeToDataURLOptionsOther
+export type QRCodeBrowserDataURLType = 'image/png' | 'image/jpeg' | 'image/webp'
+export type QRCodeDataURLType = QRCodeBrowserDataURLType | 'pdf' | 'application/pdf'
+export type QRCodeBrowserToDataURLOptions = QRCodeToDataURLOptionsJpegWebp | QRCodeToDataURLOptionsOther
+export type QRCodeToDataURLOptions = QRCodeBrowserToDataURLOptions | QRCodeToDataURLOptionsPdf
 export interface QRCodeToDataURLOptionsJpegWebp extends QRCodeRenderersOptions {
   /**
    * Data URI format (image/jpeg and image/webp: browser only).
@@ -100,7 +102,7 @@ export interface QRCodeToDataURLOptionsOther extends QRCodeRenderersOptions {
    * Data URI format.
    * @default 'image/png'
    */
-  type?: Exclude<QRCodeDataURLType, 'image/jpeg' | 'image/webp'> | undefined
+  type?: Exclude<QRCodeBrowserDataURLType, 'image/jpeg' | 'image/webp'> | undefined
   rendererOpts?: QRCodePngRendererOptions | undefined
 }
 
@@ -131,8 +133,8 @@ export interface QRCodeToStringOptionsOther extends QRCodeRenderersOptions {
   type?: Exclude<QRCodeStringType, 'terminal'> | undefined
 }
 
-export type QRCodeFileType = 'png' | 'svg' | 'utf8'
-export type QRCodeToFileOptions = QRCodeToFileOptionsPng | QRCodeToFileOptionsOther
+export type QRCodeFileType = 'png' | 'svg' | 'utf8' | 'pdf' | 'application/pdf'
+export type QRCodeToFileOptions = QRCodeToFileOptionsPng | QRCodeToFileOptionsOther | QRCodeToFileOptionsPdf
 export interface QRCodeToFileOptionsPng extends QRCodeRenderersOptions {
   /**
    * Output format.
@@ -146,7 +148,7 @@ export interface QRCodeToFileOptionsOther extends QRCodeRenderersOptions {
    * Output format.
    * @default 'png'
    */
-  type: Exclude<QRCodeFileType, 'png'> | undefined
+  type: Exclude<QRCodeFileType, 'png' | 'pdf' | 'application/pdf'> | undefined
 }
 
 export type QRCodeFileStreamType = 'png' | 'image/png'
@@ -158,11 +160,41 @@ export interface QRCodeToFileStreamOptions extends QRCodeRenderersOptions {
   rendererOpts?: QRCodePngRendererOptions | undefined
 }
 
-export type QRCodeBufferType = 'png' | 'image/png'
-export interface QRCodeToBufferOptions extends QRCodeRenderersOptions {
+export type QRCodeBufferType = 'png' | 'image/png' | 'pdf' | 'application/pdf'
+export type QRCodeToBufferOptions = QRCodeToBufferOptionsPng | QRCodeToDataURLOptionsPdf
+export interface QRCodeToBufferOptionsPng extends QRCodeRenderersOptions {
   /**
    * Output format. Only png supported for Buffer.
    */
-  type?: QRCodeBufferType | undefined
+  type?: Exclude<QRCodeBufferType, 'pdf' | 'application/pdf'> | undefined
   rendererOpts?: QRCodePngRendererOptions | undefined
+}
+
+/** Printable vector PDF layout. All distances are in millimetres. */
+export interface QRCodePdfRendererOptions {
+  /** A3, A4 (default), A5, Letter or Legal; case insensitive at runtime. */
+  pageSize?: string
+  /** Code width including quiet zone, default 50 mm. */
+  size?: number
+  /** Distance from page edges; omitted axes are centered. */
+  top?: number
+  left?: number
+  /** Batch grid: default 5 mm gap, auto-fit rows and columns. */
+  gap?: number
+  columns?: number
+  rows?: number
+}
+
+/** Node.js only: one QR per item (each item may itself be a segment array). */
+export interface QRCodeToPdfOptions extends QRCodeRenderersOptions {
+  rendererOpts?: QRCodePdfRendererOptions
+}
+
+export interface QRCodeToDataURLOptionsPdf extends QRCodeToPdfOptions {
+  type: 'pdf' | 'application/pdf'
+}
+
+/** PDF type may be inferred from a .pdf file extension. */
+export interface QRCodeToFileOptionsPdf extends QRCodeToPdfOptions {
+  type?: 'pdf' | 'application/pdf'
 }

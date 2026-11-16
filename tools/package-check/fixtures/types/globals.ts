@@ -13,3 +13,8 @@ const version: number = QRCode.create('text', { toSJISFunc: QRCode.toSJIS }).ver
 QRCode.toFile('out.png', 'text')
 
 export { version }
+
+// @ts-expect-error: browser global does not expose Node-only PDF methods
+QRCode.toPdf(['one'])
+// @ts-expect-error: browser global does not render PDF data URLs
+QRCode.toDataURL('one', { type: 'pdf' })
