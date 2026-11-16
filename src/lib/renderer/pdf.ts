@@ -81,7 +81,7 @@ function layoutAxis (pageLength: number, size: number, gap: number, start?: numb
  * Resolves and validates the grid layout (all values in millimetres)
  *
  * @param  {Object} rendererOpts pageSize, size, gap, top, left, columns, rows
- * @return {Object}              page, size, gap, columns, rows, cells: [{ top, left }]
+ * @return {Object}              page, size, gap, columns, rows, capacity, positionAt
  */
 export function getGridLayout (rendererOpts?: QRCodePdfRendererOptions | null) {
   const opts = rendererOpts || {}
@@ -133,14 +133,20 @@ export function getGridLayout (rendererOpts?: QRCodePdfRendererOptions | null) {
         ' mm) at left ' + round(x.start) + ' mm, top ' + round(y.start) + ' mm does not fit on the ' + pageDesc)
   }
 
-  const cells = []
-  for (let row = 0; row < y.count; row++) {
-    for (let col = 0; col < x.count; col++) {
-      cells.push({ left: x.start + col * (size + gap), top: y.start + row * (size + gap) })
+  const capacity = x.count * y.count
+  if (!Number.isSafeInteger(capacity)) {
+    throw new Error('PDF grid contains too many positions')
+  }
+
+  // Calculate only the positions that will actually be drawn.
+  function positionAt (index: number) {
+    return {
+      left: x.start + (index % x.count) * (size + gap),
+      top: y.start + Math.floor(index / x.count) * (size + gap)
     }
   }
 
-  return { page, size, gap, columns: x.count, rows: y.count, cells }
+  return { page, size, gap, columns: x.count, rows: y.count, capacity, positionAt }
 }
 
 /**
@@ -153,7 +159,7 @@ export function getLayout (rendererOpts?: QRCodePdfRendererOptions | null) {
   const opts = Object.assign({}, rendererOpts, { columns: 1, rows: 1 })
   const grid = getGridLayout(opts)
 
-  return { page: grid.page, size: grid.size, top: grid.cells[0].top, left: grid.cells[0].left }
+  return { page: grid.page, size: grid.size, ...grid.positionAt(0) }
 }
 
 // PDF numbers: plain decimal notation, at most 4 decimals
@@ -178,10 +184,14 @@ function drawCode (qrData: QRCode, opts: RendererOptions, placement: Placement, 
   const margin = opts.margin
   const total = size + margin * 2
   const scale = placement.size * PT_PER_MM / total
+  const scaleOperand = num(scale)
+  if (scaleOperand === '0') {
+    throw new Error('PDF size is too small to draw the QR code at the requested margin')
+  }
   const x = placement.left * PT_PER_MM
   const y = (pageHeight - placement.top) * PT_PER_MM
 
-  const ops = ['q', [num(scale), 0, 0, num(-scale), num(x), num(y), 'cm'].join(' ')]
+  const ops = ['q', [scaleOperand, 0, 0, '-' + scaleOperand, num(x), num(y), 'cm'].join(' ')]
 
   function paint (color: RGBAColor, name: string, drawOps: string[]): void {
     ops.push('q')
@@ -312,12 +322,12 @@ export function render (qrData: QRCode, options?: RendererOptionsInput | null): 
 export function renderMany (qrDataList: QRCode[], options?: RendererOptionsInput | null): Buffer {
   const opts = Utils.getOptions(options)
   const grid = getGridLayout(opts.rendererOpts)
-  const perPage = grid.cells.length
   const pages: Placement[][] = []
 
   qrDataList.forEach(function (qrData, i) {
-    if (i % perPage === 0) pages.push([])
-    const cell = grid.cells[i % perPage]
+    const index = i % grid.capacity
+    if (index === 0) pages.push([])
+    const cell = grid.positionAt(index)
     pages[pages.length - 1].push({ qrData, top: cell.top, left: cell.left, size: grid.size })
   })
 

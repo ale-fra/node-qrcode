@@ -76,7 +76,7 @@ export function saveBatch (file: string, texts: string[], options: CliOptions, i
         io.error('Error:', err.message)
         return io.exit(1)
       }
-      const pages = Math.ceil(texts.length / getGridLayout(options.rendererOpts).cells.length)
+      const pages = Math.ceil(texts.length / getGridLayout(options.rendererOpts).capacity)
       io.log('saved ' + texts.length + ' qrcode' + (texts.length === 1 ? '' : 's') + ' on ' +
         pages + ' page' + (pages === 1 ? '' : 's') + ' to: ' + file + '\n')
     })

@@ -251,19 +251,19 @@ test('PDF grid layout', function (t) {
   const grid = PdfRenderer.getGridLayout()
   t.same([grid.page.name, grid.size, grid.gap, grid.columns, grid.rows], ['A4', 50, 5, 3, 5],
     'Should fit 3 x 5 codes of 50 mm with 5 mm gaps on A4 by default')
-  t.same(grid.cells[0], { left: 25, top: 13.5 }, 'Should center the grid on the page')
-  t.same(grid.cells[1], { left: 80, top: 13.5 }, 'Should step by size + gap horizontally')
-  t.same(grid.cells[3], { left: 25, top: 68.5 }, 'Should fill row by row')
-  t.equal(grid.cells.length, 15, 'Should have one cell per code per page')
+  t.same(grid.positionAt(0), { left: 25, top: 13.5 }, 'Should center the grid on the page')
+  t.same(grid.positionAt(1), { left: 80, top: 13.5 }, 'Should step by size + gap horizontally')
+  t.same(grid.positionAt(3), { left: 25, top: 68.5 }, 'Should fill row by row')
+  t.equal(grid.capacity, 15, 'Should have one cell per code per page')
 
   const placed = PdfRenderer.getGridLayout({ size: 25, gap: 4, top: 12, left: 8 })
   t.same([placed.columns, placed.rows], [6, 9], 'Should fit from top/left up to the 10 mm border')
-  t.same(placed.cells[0], { left: 8, top: 12 }, 'Should start the grid at top/left')
+  t.same(placed.positionAt(0), { left: 8, top: 12 }, 'Should start the grid at top/left')
 
   const fixed = PdfRenderer.getGridLayout({ size: 20, gap: 0, columns: 4, rows: 6, pageSize: 'Letter' })
   t.same([fixed.columns, fixed.rows], [4, 6], 'Should use explicit columns and rows')
-  t.ok(Math.abs(fixed.cells[0].left - (215.9 - 80) / 2) < 1e-9, 'Should center an explicit grid')
-  t.same(fixed.cells[1].left - fixed.cells[0].left, 20, 'Gap 0 should place codes edge to edge')
+  t.ok(Math.abs(fixed.positionAt(0).left - (215.9 - 80) / 2) < 1e-9, 'Should center an explicit grid')
+  t.same(fixed.positionAt(1).left - fixed.positionAt(0).left, 20, 'Gap 0 should place codes edge to edge')
 
   // 15 x 16.6 + 14 x 2 = 277 mm = A4 height minus two 10 mm borders, but
   // (277 + 2) / (16.6 + 2) = 14.999999999999998 in floating point
@@ -286,6 +286,8 @@ test('PDF grid layout - invalid', function (t) {
     })
   })
   t.throws(grid({ gap: -1 }), /gap must be a non-negative number/, 'Should reject a negative gap')
+  t.throws(grid({ size: 1e-8, gap: 0 }), /grid contains too many positions/,
+    'Should reject a grid whose capacity is not a safe integer')
   t.throws(grid({ size: 195 }), /No room for a 195 mm QR code on the A4 page .* within 10 mm of the edges/,
     'Should explain when auto-fit finds no room')
   t.throws(grid({ columns: 5 }), /5 columns of 50 mm codes with 5 mm gaps need 270 mm, but the A4 page is 210 mm wide/,
@@ -294,6 +296,20 @@ test('PDF grid layout - invalid', function (t) {
     'Should reject too many rows')
   t.throws(grid({ columns: 3, left: 100 }), /Grid of 3 x 5 codes \(160 x 270 mm\) at left 100 mm, top 13.5 mm does not fit/,
     'Should reject a grid pushed off the page')
+  t.end()
+})
+
+test('PDF renders only the occupied positions of a large grid', function (t) {
+  const qrData = QRCode.create('item')
+  const options = { rendererOpts: { size: 0.01, gap: 0 } }
+  const grid = PdfRenderer.getGridLayout(options.rendererOpts)
+  t.ok(grid.capacity > 500_000_000, 'The grid fits hundreds of millions of positions')
+  const pdf = Pdf.parse(PdfRenderer.renderMany([qrData], options))
+  t.equal(pdf.pages.length, 1, 'One QR code needs only one page')
+  t.equal(Pdf.parseContent(pdf.pages[0].content).groups.length, 2, 'Only one code was drawn')
+  t.throws(function () {
+    PdfRenderer.render(qrData, { rendererOpts: { size: 1e-8 } })
+  }, /PDF size is too small to draw/, 'Should reject a scale that would serialize as zero')
   t.end()
 })
 
@@ -324,7 +340,7 @@ test('PDF renderMany', function (t) {
     t.equal(matrices.length, [8, 8, 1][p], 'Page ' + (p + 1) + ' should place ' + [8, 8, 1][p] + ' codes')
     matrices.forEach(function (line, i) {
       const m = line.split(' ').map(Number)
-      const cell = grid.cells[i]
+      const cell = grid.positionAt(i)
       const modules = qrDataList[index].modules
       const total = modules.size + 8 // quiet zone of 4 modules on each side
       // the scale is written with 4 decimals: up to 0.00005 pt error per module
