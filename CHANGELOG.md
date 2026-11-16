@@ -1,3 +1,71 @@
+# 2.0.0 (unreleased)
+
+The library is now written in TypeScript. Its behaviour is unchanged, except for
+the points below: outputs were compared with 1.5.4 on ~1350 cases (QR codes,
+renderers, files, browser entry point, CLI, browser bundles).
+
+### Breaking changes
+
+* **Node.js >= 22.13** (`engines`). The previous declaration (`>=10.13`) was
+  not accurate: the library did not work on Node.js 10 (`TextEncoder is not
+  defined`). Browsers are not affected (same syntax level and bundles as before).
+* **Dependencies**: yargs 15 -> 18 (CLI), pngjs 5 -> 7, dijkstrajs 1.0.2 -> 1.0.3.
+  Outputs are identical (PNG files included); the CLI help layout changed
+  slightly (options without short alias are indented).
+* **TypeScript types are bundled** (`types` in package.json): `@types/qrcode` is
+  no longer needed and should be removed. The type names are the same and code
+  written against `@types/qrcode` keeps compiling, with a few differences where
+  `@types/qrcode` did not match the runtime:
+  * `toFileStream()` returns `void` (it never returned a promise; errors are
+    emitted on the stream). Its callback overloads are deprecated: the callback
+    was never called.
+  * `toCanvas(canvas, ...)` resolves/calls back with the canvas (was `void`).
+  * `helper/to-sjis` returns `number | undefined` (undefined for unsupported characters).
+  * wider option types: `errorCorrectionLevel` accepts level objects, byte
+    segments accept strings and arrays of bytes, `type: 'image/png'` for
+    `toBuffer()`/`toFileStream()`.
+* **CLI file**: `bin/qrcode` is now `bin/qrcode.js`. The `qrcode` command is
+  unchanged: only scripts running the file by its path are affected.
+* **Internal modules** (deep imports such as `qrcode/lib/core/bit-matrix`):
+  classes must be instantiated with `new`, and their static methods are no
+  longer enumerable.
+* **Strict mode**: invalid options (eg. a string instead of the options object)
+  still fail, with a different error message.
+
+### Features
+
+* Printable vector PDF output (`toFile`, `toBuffer`, `toDataURL`) and `toPdf`
+  batch grids with pagination, A3/A4/A5/Letter/Legal pages and millimetre layout.
+* CLI `--batch`, `--page-size`, `--size`, `--top`, `--left`, `--gap`, `--columns`
+  and `--rows`; one code per argument or nonblank stdin line.
+* Public PDF option types, callback/promise overloads and package consumer checks.
+  The PDF writer is Node.js only and is excluded from browser bundles.
+
+* Default export: `import QRCode from 'qrcode'` works with bundlers and
+  TypeScript, with or without `esModuleInterop`.
+* Types for the browser bundles' `QRCode` global:
+  `/// <reference types="qrcode/build/qrcode" />` (and `qrcode/build/qrcode.tosjis`).
+* Source maps for all the published files (TypeScript sources included).
+
+### Bug fixes
+
+* `toDataURL()`: the callback was called twice (the second time with a
+  `TypeError`) when the image could not be rendered.
+* `toDataURL()`/`toBuffer()` with `type: 'svg' | 'utf8' | 'txt'` failed with
+  "renderFunc is not a function": they now report that png and pdf are supported.
+* `null` options are treated as omitted options (they threw a `TypeError`).
+* README: the kanji example used `build/qrcode.min.js` and
+  `build/qrcode.tosjis.min.js`, which do not exist (`build/qrcode.js`, `build/qrcode.tosjis.js`).
+
+### Documentation
+
+* README: `toBuffer()` documented, CLI help updated (`--inverse` was missing),
+  `toFileStream()` error reporting, Node.js requirement, TypeScript usage.
+* `CONTRIBUTING.md`: development guide (layout, scripts, test conventions).
+
+Note: releases 1.4.0 to 1.5.4 are not listed in this file.
+
+
 ## [1.3.3](https://github.com/soldair/node-qrcode/compare/v1.3.2...v1.3.3) (2019-01-16)
 
 fixing security vulnerabillities reported by users of snyk and `npm audit` major

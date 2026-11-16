@@ -1,0 +1,6 @@
+# pnpm settings (single package, no workspace)
+
+# esbuild (used by tsx) ships its binary as an optional dependency:
+# its install script (binary check) is not needed
+ignoredBuiltDependencies:
+  - esbuild

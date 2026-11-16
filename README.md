@@ -1,7 +1,6 @@
 # node-qrcode
 > QR code/2d barcode generator.
 
-[![Travis](https://img.shields.io/travis/soldair/node-qrcode.svg?style=flat-square)](http://travis-ci.org/soldair/node-qrcode)
 [![npm](https://img.shields.io/npm/v/qrcode.svg?style=flat-square)](https://www.npmjs.com/package/qrcode)
 [![npm](https://img.shields.io/npm/dt/qrcode.svg?style=flat-square)](https://www.npmjs.com/package/qrcode)
 [![npm](https://img.shields.io/npm/l/qrcode.svg?style=flat-square)](https://github.com/soldair/node-qrcode/blob/master/license)
@@ -43,6 +42,8 @@ or, install it globally to use `qrcode` from the command line to save qrcode ima
 npm install -g qrcode
 ```
 
+Requires Node.js >= 22.13 (browsers: see [Browser](#browser)).
+
 ## Usage
 ### CLI
 
@@ -55,26 +56,74 @@ QR Code options:
   -m, --mask      Mask pattern (0 - 7)                                  [number]
 
 Renderer options:
-  -t, --type        Output type                  [choices: "png", "svg", "utf8"]
+  -t, --type        Output type           [choices: "png", "svg", "utf8", "pdf"]
+  -i, --inverse     Invert colors                                      [boolean]
   -w, --width       Image width (px)                                    [number]
   -s, --scale       Scale factor                                        [number]
   -q, --qzone       Quiet zone size                                     [number]
   -l, --lightcolor  Light RGBA hex color
   -d, --darkcolor   Dark RGBA hex color
-  --small  Output smaller QR code to terminal                          [boolean]
+      --small       Output smaller QR code to terminal                 [boolean]
+
+PDF options (sizes in mm):
+      --page-size  Page size
+                    [choices: "A4", "A3", "A5", "Letter", "Legal"] [default: A4]
+      --size       QR code size, quiet zone included      [number] [default: 50]
+      --top        Distance from the top edge of the page
+                                                    [number] [default: centered]
+      --left       Distance from the left edge of the page
+                                                    [number] [default: centered]
+      --gap        Space between codes (--batch)           [number] [default: 5]
+      --columns    Codes per row (--batch)    [number] [default: as many as fit]
+      --rows       Rows per page (--batch)    [number] [default: as many as fit]
+      --batch      One QR code per input line (stdin) or argument, laid out on a
+                   grid over as many pages as needed                   [boolean]
 
 Options:
-  -o, --output  Output file
-  -h, --help    Show help                                              [boolean]
-  --version     Show version number                                    [boolean]
+  -o, --output   Output file
+  -h, --help     Show help                                             [boolean]
+      --version  Show version number                                   [boolean]
 
 Examples:
-  qrcode "some text"                    Draw in terminal window
-  qrcode -o out.png "some text"         Save as png image
-  qrcode -d F00 -o out.png "some text"  Use red as foreground color
+  qrcode "some text"                        Draw in terminal window
+  qrcode -o out.png "some text"             Save as png image
+  qrcode -d F00 -o out.png "some text"      Use red as foreground color
+  qrcode -o out.pdf --size 40 --top 20      Place a 40 mm QR code on an A4 PDF
+  --left 20 "some text"
+  qrcode -o sheet.pdf --batch --size 30 <   One 30 mm QR code per line, as many
+  urls.txt                                  pages as needed
 ```
 If not specified, output type is guessed from file extension.<br>
-Recognized extensions are `png`, `svg` and `txt`.
+Recognized extensions are `png`, `svg`, `txt` and `pdf`.
+
+#### Printing (PDF)
+Save the QR code on a printable page (A4 by default), with its size and position in millimetres:
+
+```shell
+# 50 mm code centered on an A4 page
+qrcode -o qrcode.pdf "some text"
+
+# 40 mm code, 20 mm from the top-left corner of a Letter page
+qrcode -o qrcode.pdf --page-size Letter --size 40 --top 20 --left 20 "some text"
+```
+The PDF is vector-based, so the code stays sharp at any size. `--size` includes the quiet zone (`--qzone`).
+
+With `--batch`, each line of the input (or each argument) becomes its own QR code. The codes are laid out on a grid, row by row, adding pages as needed:
+
+```shell
+# one 30 mm code per line of urls.txt, as many per page as fit
+qrcode -o sheet.pdf --batch --size 30 < urls.txt
+
+# label sheet: 4 x 6 codes of 40 mm, 8 mm apart, grid starting 8 mm from the top and 13 mm from the left
+qrcode -o labels.pdf --batch --size 40 --gap 8 --columns 4 --rows 6 --top 8 --left 13 < ids.txt
+
+# codes given as arguments
+qrcode -o sheet.pdf --batch "https://example.com/a" "https://example.com/b"
+```
+Blank lines are skipped. Without `--columns`/`--rows`, as many codes as fit are placed while keeping 10 mm from the page edges; without `--top`/`--left` the grid is centered. Every page uses the same grid, so the codes line up with pre-cut label sheets. Print at 100% ("actual size") to keep the exact dimensions.
+
+PDF output and `toPdf` are Node.js features. Browser entry points and bundles
+support canvas, image data URLs and SVG; they do not include the PDF writer.
 
 ### Browser
 `node-qrcode` can be used in browser through module bundlers like [Browserify](https://github.com/substack/node-browserify) and [Webpack](https://github.com/webpack/webpack) or by including the precompiled bundle present in `build/` folder.
@@ -161,6 +210,25 @@ const generateQR = async text => {
     console.error(err)
   }
 }
+```
+
+### TypeScript
+Type definitions are included in the package: [@types/qrcode](https://www.npmjs.com/package/@types/qrcode) is no longer needed and can be removed.<br>
+Type names are the same as in `@types/qrcode`.
+
+```typescript
+import QRCode from 'qrcode'
+import type { QRCodeToDataURLOptions } from 'qrcode'
+
+const options: QRCodeToDataURLOptions = { errorCorrectionLevel: 'H', margin: 2 }
+const url: string = await QRCode.toDataURL('I am a pony!', options)
+```
+
+With the precompiled bundles (`<script>` tags), the types of the `QRCode` global can be referenced with:
+
+```typescript
+/// <reference types="qrcode/build/qrcode" />
+/// <reference types="qrcode/build/qrcode.tosjis" />
 ```
 
 ## Error correction level
@@ -299,8 +367,8 @@ With precompiled bundle:
 ```html
 <canvas id="canvas"></canvas>
 
-<script src="/build/qrcode.min.js"></script>
-<script src="/build/qrcode.tosjis.min.js"></script>
+<script src="/build/qrcode.js"></script>
+<script src="/build/qrcode.tosjis.js"></script>
 <script>
   QRCode.toCanvas(document.getElementById('canvas'),
     'sample text', { toSJISFunc: QRCode.toSJIS }, function (error) {
@@ -350,7 +418,7 @@ QRCode.toFile(
 )
 ```
 
-TypeScript users: if you are using [@types/qrcode](https://www.npmjs.com/package/@types/qrcode), you will need to add a `// @ts-ignore` above the data segment because it expects `data: string`.
+TypeScript users: binary segments are supported by the bundled type definitions (`data: Buffer | Uint8Array | Uint8ClampedArray`), no `// @ts-ignore` is needed.
 
 ## Multibyte characters
 Support for multibyte characters isn't present in the initial QR Code standard, but is possible to encode UTF-8 characters in Byte mode.
@@ -373,6 +441,8 @@ Server:
 - [toCanvas()](#tocanvascanvas-text-options-cberror)
 - [toDataURL()](#todataurltext-options-cberror-url-1)
 - [toString()](#tostringtext-options-cberror-string-1)
+- [toBuffer()](#tobuffertext-options-cberror-buffer)
+- [toPdf()](#topdftexts-options-cberror-buffer)
 - [toFile()](#tofilepath-text-options-cberror)
 - [toFileStream()](#tofilestreamstream-text-options)
 
@@ -540,7 +610,8 @@ See [create](#createtext-options).
 <br>
 
 #### `toCanvas(canvas, text, [options], [cb(error)])`
-Draws qr code symbol to [node canvas](https://github.com/Automattic/node-canvas).
+Draws qr code symbol to a canvas object implementing the canvas API, like
+[node-canvas](https://github.com/Automattic/node-canvas) or [@napi-rs/canvas](https://github.com/Brooooooklyn/canvas).
 
 ##### `text`
 Type: `String|Array`
@@ -559,7 +630,7 @@ Callback function called on finish.
 
 #### `toDataURL(text, [options], [cb(error, url)])`
 Returns a Data URI containing a representation of the QR Code image.<br>
-Only works with `image/png` type for now.
+Node.js supports `image/png`, `pdf` and `application/pdf`. PDF returns a `data:application/pdf;base64,...` URL. Types `svg`, `utf8` and `txt` return an error.
 
 ##### `text`
 Type: `String|Array`
@@ -573,6 +644,42 @@ See [Options](#options) for other settings.
 Type: `Function`
 
 Callback function called on finish.
+
+<br>
+
+#### `toBuffer(text, [options], [cb(error, buffer)])`
+Returns a Buffer containing a PNG image or vector PDF of the QR Code.<br>
+Accepts `png`, `image/png`, `pdf` and `application/pdf`. Types `svg`, `utf8` and `txt` return an error.
+
+##### `text`
+Type: `String|Array`
+
+Text to encode or a list of objects describing segments.
+
+##### `options`
+- ###### `rendererOpts.deflateLevel`
+  Type: `Number`<br>
+  Default: `9`
+
+  Compression level for deflate.
+
+- ###### `rendererOpts.deflateStrategy`
+  Type: `Number`<br>
+  Default: `3`
+
+  Compression strategy for deflate.
+
+See [Options](#options) for other settings.
+
+##### `cb`
+Type: `Function`
+
+Callback function called on finish.
+
+##### Example
+```javascript
+const buffer = await QRCode.toBuffer('Some text', { scale: 8 })
+```
 
 <br>
 
@@ -631,7 +738,7 @@ Text to encode or a list of objects describing segments.
   Default: `png`
 
   Output format.<br>
-  Possible values are: `png`, `svg`, `utf8`.
+  Possible values are: `png`, `svg`, `utf8`, `pdf` and `application/pdf`.
 
 - ###### `rendererOpts.deflateLevel` **(png only)**
   Type: `Number`<br>
@@ -644,6 +751,26 @@ Text to encode or a list of objects describing segments.
   Default: `3`
 
   Compression strategy for deflate.
+
+- ###### `rendererOpts.pageSize` **(pdf only)**
+  Type: `String`<br>
+  Default: `A4`
+
+  Page size: `A4`, `A3`, `A5`, `Letter` or `Legal` (case-insensitive, portrait).
+
+- ###### `rendererOpts.size` **(pdf only)**
+  Type: `Number`<br>
+  Default: `50`
+
+  Size of the QR code in millimetres, quiet zone (`margin`) included.
+  `width` and `scale` do not apply to PDF.
+
+- ###### `rendererOpts.top`, `rendererOpts.left` **(pdf only)**
+  Type: `Number`<br>
+  Default: centered on the page
+
+  Distance in millimetres from the top and left edges of the page to the QR code (quiet zone included).
+  An error is returned if the code does not fit on the page.
 
 See [Options](#options) for other settings.
 
@@ -667,8 +794,45 @@ QRCode.toFile('path/to/filename.png', 'Some text', {
 
 <br>
 
+#### `toPdf(texts, [options], [cb(error, buffer)])`
+Places several QR codes on a grid in a PDF document, row by row, adding pages as needed.
+Returns a Promise resolving to a `Buffer` if no callback is given.
+
+##### `texts`
+Type: `Array`
+
+One entry per QR code: a string, or a list of segments as accepted by [create](#createtext-options).
+
+##### `options`
+Options for all codes, see [Options](#options). The grid is configured with `rendererOpts` (sizes in millimetres):
+
+- `pageSize`: `A4` (default), `A3`, `A5`, `Letter` or `Legal`
+- `size`: size of each code, quiet zone included. Default `50`
+- `gap`: space between codes. Default `5`
+- `columns`, `rows`: codes per row and rows per page. Default: as many as fit, keeping 10 mm from the page edges
+- `top`, `left`: position of the grid's top-left corner. Default: grid centered on the page
+
+An error is returned if the grid does not fit on the page, or if a text cannot be encoded (`Item N: ...`).
+
+##### `cb`
+Type: `Function`
+
+Callback function called on finish.
+
+##### Example
+```javascript
+const fs = require('fs')
+
+const urls = ['https://example.com/1', 'https://example.com/2', 'https://example.com/3']
+QRCode.toPdf(urls, { rendererOpts: { size: 30, gap: 5, columns: 4 } })
+  .then(pdf => fs.promises.writeFile('sheet.pdf', pdf))
+```
+
+<br>
+
 #### `toFileStream(stream, text, [options])`
-Writes QR Code image to stream. Only works with `png` format for now.
+Writes QR Code image to stream. Only works with `png` format for now.<br>
+Errors are emitted on the stream (`'error'` event): there is no callback and no promise.
 
 ##### `stream`
 Type: `stream.Writable`
@@ -761,7 +925,7 @@ https://github.com/soldair/node-qrcode/issues/45
 
 
 ## Credits
-This lib is based on "QRCode for JavaScript" which Kazuhiko Arase thankfully MIT licensed.
+This library is based on the MIT-licensed "QRCode for JavaScript" project.
 
 ## License
 [MIT](https://github.com/soldair/node-qrcode/blob/master/license)

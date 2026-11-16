@@ -1,0 +1,11 @@
+{
+  // Solution file: `tsc -b` builds/type-checks all the projects, incrementally
+  // and in dependency order
+  "files": [],
+  "references": [
+    { "path": "./src" },
+    { "path": "./test" },
+    { "path": "./examples" },
+    { "path": "./tools" }
+  ]
+}

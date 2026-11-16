@@ -1,0 +1,30 @@
+{
+  // Library: src/{lib,helper,bin} compile to ./{lib,helper,bin}, so published
+  // paths (main, browser field, bin, qrcode/helper/to-sjis, deep lib/ imports)
+  // stay exactly the same as in the JavaScript version
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": "..",
+    "tsBuildInfoFile": "../.cache/tsc/src.tsbuildinfo",
+
+    // CommonJS output; ES2015 is the syntax level lib/ already shipped
+    // (bundlers consume lib/ directly through the "browser" field)
+    "target": "ES2015",
+    // DOM: canvas renderer / browser entry point
+    "lib": ["ES2018", "DOM"],
+    // node16 implies "force" (every file is a module): "auto" keeps
+    // helper/to-sjis-browser.ts a plain script (browser bundle entry)
+    "moduleDetection": "auto",
+
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+  },
+  "include": ["**/*.ts"],
+  // must be explicit: by default tsc excludes outDir, which contains src/.
+  // globals/: types of the browser bundles' global (declare a global QRCode
+  // namespace), copied to build/ by the bundle build
+  "exclude": ["**/node_modules", "globals"]
+}

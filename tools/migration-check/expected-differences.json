@@ -1,0 +1,49 @@
+[
+  {
+    "path": "^surface:lib/(index|browser)\\.default$",
+    "reason": "New default export, so that `import QRCode from 'qrcode'` keeps working with Babel/webpack/TypeScript interop (compiled modules are flagged with __esModule)"
+  },
+  {
+    "path": "^surface:lib/core/(alphanumeric|byte|kanji|numeric)-data\\.enumerableStatics\\[0\\]$",
+    "reason": "ES class static methods are not enumerable; getBitsLength() still exists (see the 'statics' entries, which are identical)"
+  },
+  {
+    "path": "^args:.*\\.rejected$",
+    "reason": "Strict mode (TypeScript emits 'use strict'): malformed options (non-object options / rendererOpts) already rejected with a TypeError, the TypeError message is different. No input changed between success and failure",
+    "refMatches": "^Cannot (read|create) propert",
+    "candMatches": "^Cannot create property '[a-zA-Z]+' on (string|number|boolean) "
+  },
+  {
+    "path": "^cli\\.\\[\"--version\"\\]\\.out$",
+    "reason": "Package version changed from 1.5.4 to 2.0.0",
+    "refMatches": "^1\\.5\\.4\\n$",
+    "candMatches": "^2\\.0\\.0\\n$"
+  },
+  {
+    "path": "^cli\\.\\[\"-h\"\\]\\.out$",
+    "reason": "CLI help adds PDF output, layout and batch options; yargs 18 also changes whitespace."
+  },
+  {
+    "path": "^to(DataURL|Buffer):\\d+:\\d+:(svg|utf8|txt):(cb\\.results\\[0\\]\\.err|p\\.rejected)$",
+    "refMatches": "^renderFunc is not a function$",
+    "candMatches": "^Type \"(svg|utf8|txt)\" is not supported by to(DataURL|Buffer)\\(\\)\\. Only \"png\" and \"pdf\" are supported\\.$",
+    "reason": "Documented bug fix: unsupported output types now report a useful error instead of invoking an absent renderer method."
+  },
+  {
+    "path": "^args:toString\\(null opts cb\\)\\.returned$",
+    "refMatches": "^undefined$",
+    "candMatches": "^string$",
+    "reason": "Documented bug fix: null options are treated as omitted; SVG/UTF8 renderer returns its string after calling the callback."
+  },
+  {
+    "path": "^surface:lib/(index|server)\\.toPdf$",
+    "refMatches": "^undefined$",
+    "reason": "New Node-only printable PDF batch API. Verified by the PDF geometry suite and installed package checks."
+  },
+  {
+    "path": "^cli\\.helpText$",
+    "refMatches": "^650e8dd3f92439f58b1e008529f9d09890cc0f27f8e745885894e772be13bae7$",
+    "candMatches": "^56d126461de2d8f609749cf5e1b5475412f91578bf43447f7d7561cc4738a550$",
+    "reason": "CLI adds exactly the reviewed PDF renderer, layout and batch help text. Hash constraints reject any unrelated help change."
+  }
+]

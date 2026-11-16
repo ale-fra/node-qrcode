@@ -1,0 +1,20 @@
+{
+  // Examples: type-checked against the compiled library (no emit).
+  // They are run directly by Node.js (>= 22.18) which strips the types:
+  // erasableSyntaxOnly ensures that only strippable TypeScript syntax is used.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "tsBuildInfoFile": "../.cache/tsc/examples.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    // ES modules run by Node.js: default imports of CommonJS modules are
+    // module.exports (eg. `import fs from 'fs'`)
+    "esModuleInterop": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["*.mts", "types/*.d.ts"],
+  // build order: the examples import the compiled library
+  "references": [{ "path": "../src" }]
+}
