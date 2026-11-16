@@ -1,0 +1,19 @@
+{
+  // Development tools (run through tsx) and rollup.config.ts: type-checked only (no emit)
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // the tools are run by tsx and the rollup config is bundled by rollup:
+    // bundler resolution (some rollup plugins only expose their types this way)
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    // old rollup plugins declare their types outside of their "exports" map
+    "resolvePackageJsonExports": false,
+    "tsBuildInfoFile": "../.cache/tsc/tools.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["**/*.ts", "../rollup.config.ts"],
+  // consumer files of package-check: compiled against the installed package
+  "exclude": ["package-check/fixtures"]
+}

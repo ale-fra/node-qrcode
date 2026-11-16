@@ -2,4 +2,11 @@
 node_modules
 coverage
 .nyc_output
-build
+/build/
+.cache/
+dist/
+
+# compiled from src/ (see tsconfig.json)
+/lib/
+/helper/
+/bin/

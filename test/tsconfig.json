@@ -1,0 +1,14 @@
+{
+  // Tests: type-checked only (no emit), run by tap through tsx (see .taprc).
+  // Tests import the compiled library (lib/, helper/, bin/) to test exactly what
+  // is published: the src project reference ensures that it is built first.
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "tsBuildInfoFile": "../.cache/tsc/test.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["**/*.ts"],
+  "references": [{ "path": "../src" }]
+}

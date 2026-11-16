@@ -1,7 +1,6 @@
 # node-qrcode
 > QR code/2d barcode generator.
 
-[![Travis](https://img.shields.io/travis/soldair/node-qrcode.svg?style=flat-square)](http://travis-ci.org/soldair/node-qrcode)
 [![npm](https://img.shields.io/npm/v/qrcode.svg?style=flat-square)](https://www.npmjs.com/package/qrcode)
 [![npm](https://img.shields.io/npm/dt/qrcode.svg?style=flat-square)](https://www.npmjs.com/package/qrcode)
 [![npm](https://img.shields.io/npm/l/qrcode.svg?style=flat-square)](https://github.com/soldair/node-qrcode/blob/master/license)
@@ -43,6 +42,8 @@ or, install it globally to use `qrcode` from the command line to save qrcode ima
 npm install -g qrcode
 ```
 
+Requires Node.js >= 22.13 (browsers: see [Browser](#browser)).
+
 ## Usage
 ### CLI
 
@@ -56,17 +57,18 @@ QR Code options:
 
 Renderer options:
   -t, --type        Output type                  [choices: "png", "svg", "utf8"]
+  -i, --inverse     Invert colors                                      [boolean]
   -w, --width       Image width (px)                                    [number]
   -s, --scale       Scale factor                                        [number]
   -q, --qzone       Quiet zone size                                     [number]
   -l, --lightcolor  Light RGBA hex color
   -d, --darkcolor   Dark RGBA hex color
-  --small  Output smaller QR code to terminal                          [boolean]
+      --small       Output smaller QR code to terminal                 [boolean]
 
 Options:
-  -o, --output  Output file
-  -h, --help    Show help                                              [boolean]
-  --version     Show version number                                    [boolean]
+  -o, --output   Output file
+  -h, --help     Show help                                             [boolean]
+      --version  Show version number                                   [boolean]
 
 Examples:
   qrcode "some text"                    Draw in terminal window
@@ -161,6 +163,25 @@ const generateQR = async text => {
     console.error(err)
   }
 }
+```
+
+### TypeScript
+Type definitions are included in the package: [@types/qrcode](https://www.npmjs.com/package/@types/qrcode) is no longer needed and can be removed.<br>
+Type names are the same as in `@types/qrcode`.
+
+```typescript
+import QRCode from 'qrcode'
+import type { QRCodeToDataURLOptions } from 'qrcode'
+
+const options: QRCodeToDataURLOptions = { errorCorrectionLevel: 'H', margin: 2 }
+const url: string = await QRCode.toDataURL('I am a pony!', options)
+```
+
+With the precompiled bundles (`<script>` tags), the types of the `QRCode` global can be referenced with:
+
+```typescript
+/// <reference types="qrcode/build/qrcode" />
+/// <reference types="qrcode/build/qrcode.tosjis" />
 ```
 
 ## Error correction level
@@ -299,8 +320,8 @@ With precompiled bundle:
 ```html
 <canvas id="canvas"></canvas>
 
-<script src="/build/qrcode.min.js"></script>
-<script src="/build/qrcode.tosjis.min.js"></script>
+<script src="/build/qrcode.js"></script>
+<script src="/build/qrcode.tosjis.js"></script>
 <script>
   QRCode.toCanvas(document.getElementById('canvas'),
     'sample text', { toSJISFunc: QRCode.toSJIS }, function (error) {
@@ -350,7 +371,7 @@ QRCode.toFile(
 )
 ```
 
-TypeScript users: if you are using [@types/qrcode](https://www.npmjs.com/package/@types/qrcode), you will need to add a `// @ts-ignore` above the data segment because it expects `data: string`.
+TypeScript users: binary segments are supported by the bundled type definitions (`data: Buffer | Uint8Array | Uint8ClampedArray`), no `// @ts-ignore` is needed.
 
 ## Multibyte characters
 Support for multibyte characters isn't present in the initial QR Code standard, but is possible to encode UTF-8 characters in Byte mode.
@@ -373,6 +394,7 @@ Server:
 - [toCanvas()](#tocanvascanvas-text-options-cberror)
 - [toDataURL()](#todataurltext-options-cberror-url-1)
 - [toString()](#tostringtext-options-cberror-string-1)
+- [toBuffer()](#tobuffertext-options-cberror-buffer)
 - [toFile()](#tofilepath-text-options-cberror)
 - [toFileStream()](#tofilestreamstream-text-options)
 
@@ -540,7 +562,8 @@ See [create](#createtext-options).
 <br>
 
 #### `toCanvas(canvas, text, [options], [cb(error)])`
-Draws qr code symbol to [node canvas](https://github.com/Automattic/node-canvas).
+Draws qr code symbol to a canvas object implementing the canvas API, like
+[node-canvas](https://github.com/Automattic/node-canvas) or [@napi-rs/canvas](https://github.com/Brooooooklyn/canvas).
 
 ##### `text`
 Type: `String|Array`
@@ -559,7 +582,7 @@ Callback function called on finish.
 
 #### `toDataURL(text, [options], [cb(error, url)])`
 Returns a Data URI containing a representation of the QR Code image.<br>
-Only works with `image/png` type for now.
+Only works with `image/png` type for now: types `svg`, `utf8` and `txt` return an error.
 
 ##### `text`
 Type: `String|Array`
@@ -573,6 +596,42 @@ See [Options](#options) for other settings.
 Type: `Function`
 
 Callback function called on finish.
+
+<br>
+
+#### `toBuffer(text, [options], [cb(error, buffer)])`
+Returns a Buffer containing a PNG image of the QR Code.<br>
+Only works with `png` type for now: types `svg`, `utf8` and `txt` return an error.
+
+##### `text`
+Type: `String|Array`
+
+Text to encode or a list of objects describing segments.
+
+##### `options`
+- ###### `rendererOpts.deflateLevel`
+  Type: `Number`<br>
+  Default: `9`
+
+  Compression level for deflate.
+
+- ###### `rendererOpts.deflateStrategy`
+  Type: `Number`<br>
+  Default: `3`
+
+  Compression strategy for deflate.
+
+See [Options](#options) for other settings.
+
+##### `cb`
+Type: `Function`
+
+Callback function called on finish.
+
+##### Example
+```javascript
+const buffer = await QRCode.toBuffer('Some text', { scale: 8 })
+```
 
 <br>
 
@@ -668,7 +727,8 @@ QRCode.toFile('path/to/filename.png', 'Some text', {
 <br>
 
 #### `toFileStream(stream, text, [options])`
-Writes QR Code image to stream. Only works with `png` format for now.
+Writes QR Code image to stream. Only works with `png` format for now.<br>
+Errors are emitted on the stream (`'error'` event): there is no callback and no promise.
 
 ##### `stream`
 Type: `stream.Writable`
@@ -761,7 +821,7 @@ https://github.com/soldair/node-qrcode/issues/45
 
 
 ## Credits
-This lib is based on "QRCode for JavaScript" which Kazuhiko Arase thankfully MIT licensed.
+This library is based on the MIT-licensed "QRCode for JavaScript" project.
 
 ## License
 [MIT](https://github.com/soldair/node-qrcode/blob/master/license)

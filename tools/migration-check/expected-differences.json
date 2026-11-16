@@ -1,0 +1,38 @@
+[
+  {
+    "path": "^surface:lib/(index|browser)\\.default$",
+    "reason": "New default export, so that `import QRCode from 'qrcode'` keeps working with Babel/webpack/TypeScript interop (compiled modules are flagged with __esModule)"
+  },
+  {
+    "path": "^surface:lib/core/(alphanumeric|byte|kanji|numeric)-data\\.enumerableStatics\\[0\\]$",
+    "reason": "ES class static methods are not enumerable; getBitsLength() still exists (see the 'statics' entries, which are identical)"
+  },
+  {
+    "path": "^args:.*\\.rejected$",
+    "reason": "Strict mode (TypeScript emits 'use strict'): malformed options (non-object options / rendererOpts) already rejected with a TypeError, the TypeError message is different. No input changed between success and failure",
+    "refMatches": "^Cannot (read|create) propert",
+    "candMatches": "^Cannot create property '[a-zA-Z]+' on (string|number|boolean) "
+  },
+  {
+    "path": "^cli\\.\\[\"--version\"\\]\\.out$",
+    "reason": "Package version changed from 1.5.4 to 2.0.0",
+    "refMatches": "^1\\.5\\.4\\n$",
+    "candMatches": "^2\\.0\\.0\\n$"
+  },
+  {
+    "path": "^cli\\.\\[\"-h\"\\]\\.out$",
+    "reason": "yargs 18: help layout (options without short alias are indented); same text (see cli.helpText, compared without whitespace)"
+  },
+  {
+    "path": "^to(DataURL|Buffer):\\d+:\\d+:(svg|utf8|txt):(cb\\.results\\[0\\]\\.err|p\\.rejected)$",
+    "refMatches": "^renderFunc is not a function$",
+    "candMatches": "^Type \"(svg|utf8|txt)\" is not supported by to(DataURL|Buffer)\\(\\)\\. Only \"png\" is supported\\.$",
+    "reason": "Documented bug fix: unsupported output types now report a useful error instead of invoking an absent renderer method."
+  },
+  {
+    "path": "^args:toString\\(null opts cb\\)\\.returned$",
+    "refMatches": "^undefined$",
+    "candMatches": "^string$",
+    "reason": "Documented bug fix: null options are treated as omitted; SVG/UTF8 renderer returns its string after calling the callback."
+  }
+]

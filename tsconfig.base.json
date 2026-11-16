@@ -1,0 +1,23 @@
+{
+  // Options shared by all the TypeScript projects of the repository
+  // (see tsconfig.json for the list of projects)
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    // all internal modules are compiled TypeScript and third party modules are
+    // imported by name: interop helpers would only add code (one copy per module)
+    "esModuleInterop": false,
+    "types": ["node"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    // incremental builds: build info is stored in .cache/tsc (see each project)
+    "incremental": true,
+    "newLine": "lf"
+  }
+}

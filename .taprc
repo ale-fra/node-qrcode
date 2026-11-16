@@ -1,0 +1,19 @@
+# tap configuration (tap 16)
+# Tests are TypeScript, run through tsx (type checking is done by `tsc -b`).
+# They test the compiled library (lib/, helper/, bin/): run `pnpm build:ts` first
+# (done by `pnpm test` through the pretest script).
+files:
+  - test/**/*.test.ts
+node-arg:
+  # tap installs source-map-support when a test requires it, ie. after tsx
+  # compiled the test file: installed first, so that failure locations point
+  # to the .ts test sources
+  - --require=source-map-support/register-hook-require
+  - --require=tsx/cjs
+  - --throw-deprecation
+# coverage: see .nycrc.json
+check-coverage: true
+branches: 100
+functions: 100
+lines: 100
+statements: 100
